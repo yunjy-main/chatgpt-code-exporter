@@ -1,4 +1,4 @@
-checkpoint: PROJECT_DESCRIPTION.txt@v1.1_add_chrome_extension_constraints_section
+checkpoint: PROJECT_DESCRIPTION.txt@v1.3_add_markdown_conversation_export
 
 ============================================================
 ChatGPT Code/Text Exporter (perc_ldl)
@@ -10,11 +10,14 @@ This Chrome Extension exports:
 
 1) All code blocks from a ChatGPT conversation
 2) The full non-code conversation text
+3) A reconstructed Markdown conversation
 
 Outputs:
 
 - chatgpt_<project>_<conversation>_<timestamp>_code.zip
 - chatgpt_<project>_<conversation>_<timestamp>_text.zip
+  (contains .txt and .md)
+- chatgpt_<project>_<conversation>_<timestamp>_full.html
 
 The system is designed for traceability, reproducibility,
 and structured code lifecycle management inside the perc_ldl workflow.
@@ -138,8 +141,17 @@ Prevents Windows filename corruption.
 Contains:
 
     conversation_<project>_<conversation>_<timestamp>.txt
+    conversation_<project>_<conversation>_<timestamp>.md
 
-Includes full conversation text.
+Includes full conversation text and a reconstructed Markdown conversation.
+
+5.3 Full HTML
+
+Contains:
+
+    chatgpt_<project>_<conversation>_<timestamp>_full.html
+
+Includes full DOM snapshot as rendered.
 
 
 6. ENCODING POLICY
@@ -226,7 +238,8 @@ chatgpt-code-exporter/
 4) DOM scanned
 5) Filenames determined
 6) ZIP files generated
-7) Downloads triggered
+7) Full HTML generated
+8) Downloads triggered
 
 
 10. STABILITY DECISIONS

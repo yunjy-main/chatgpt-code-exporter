@@ -1,4 +1,4 @@
-// checkpoint: content.js@v0.5.1_restore_v032_logic_with_auto_at_prefix_whitelist_and_unique_suffix
+// checkpoint: content.js@v0.5.3_add_markdown_conversation_export
 (async () => {
 
   // ------------------------------
@@ -140,8 +140,7 @@
     return concatBytes([localData,centralDir,end]);
   }
 
-  async function downloadZip(zipBytes,filename){
-    const blob=new Blob([zipBytes],{type:"application/zip"});
+  async function downloadBlob(blob,filename){
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;
@@ -150,6 +149,16 @@
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }
+
+  async function downloadZip(zipBytes,filename){
+    const blob=new Blob([zipBytes],{type:"application/zip"});
+    return downloadBlob(blob,filename);
+  }
+
+  async function downloadHtml(html,filename){
+    const blob=new Blob([html],{type:"text/html;charset=utf-8"});
+    return downloadBlob(blob,filename);
   }
 
   // ------------------------------
@@ -163,6 +172,7 @@
 
   const zipNameCode=`chatgpt_${project}_${conversation_key}_${stamp}_code.zip`;
   const zipNameText=`chatgpt_${project}_${conversation_key}_${stamp}_text.zip`;
+  const fullHtmlName=`chatgpt_${project}_${conversation_key}_${stamp}_full.html`;
 
   // ------------------------------
   // Filename detection
@@ -270,12 +280,83 @@
   }
 
   // ------------------------------
+  // Conversation Markdown
+  // ------------------------------
+
+  function roleTitle(role){
+    const map={user:"User",assistant:"Assistant",system:"System",tool:"Tool"};
+    return map[role] || role || "Message";
+  }
+
+  function extractCodeBlock(preEl){
+    const codeEl=preEl.querySelector("code");
+    let codeText=(codeEl?.innerText || preEl.innerText || "").replace(/\r\n/g,"\n");
+    codeText=codeText.replace(/\n+$/g,"");
+    let lang="";
+    if(codeEl){
+      const m=codeEl.className.match(/language-([a-z0-9_+-]+)/i);
+      if(m?.[1]) lang=m[1];
+    }
+    return {codeText,lang};
+  }
+
+  function renderMessageMarkdown(msgEl){
+    const role=msgEl.getAttribute("data-message-author-role") || "message";
+    const roleLabel=roleTitle(role);
+    const clone=msgEl.cloneNode(true);
+
+    const preEls=Array.from(clone.querySelectorAll("pre"));
+    preEls.forEach((pre,idx)=>{
+      pre.replaceWith(document.createTextNode(`\n[[CODEBLOCK_${idx}]]\n`));
+    });
+
+    let text=(clone.innerText || "").replace(/\r\n/g,"\n").trim();
+    let md=`## ${roleLabel}\n`;
+    if(text) md+=`${text}\n`;
+
+    const originalPres=Array.from(msgEl.querySelectorAll("pre"));
+    originalPres.forEach((pre,idx)=>{
+      const {codeText,lang}=extractCodeBlock(pre);
+      if(!codeText) return;
+      const fence="```" + (lang || "");
+      const block=fence + "\n" + codeText + "\n```";
+      const marker=`[[CODEBLOCK_${idx}]]`;
+      if(md.includes(marker)){
+        while(md.includes(marker)) md=md.replace(marker,block);
+      }else{
+        md+="\n" + block + "\n";
+      }
+    });
+
+    return md.trim();
+  }
+
+  function buildConversationMarkdown(){
+    const messages=Array.from(document.querySelectorAll("[data-message-author-role]"));
+    if(!messages.length){
+      const body=(document.body.innerText || "").replace(/\r\n/g,"\n").trim();
+      return `# Conversation\n\n${body}\n`;
+    }
+    const parts=["# Conversation"];
+    for(const msg of messages){
+      parts.push(renderMessageMarkdown(msg));
+    }
+    return parts.join("\n\n").trim() + "\n";
+  }
+
+  // ------------------------------
   // Text export
   // ------------------------------
 
+  const plainText=document.body.innerText || "";
+  const markdownText=buildConversationMarkdown();
+
   const textFiles=[{
     name:`conversation_${project}_${conversation_key}_${stamp}.txt`,
-    data:encoder.encode(document.body.innerText||"")
+    data:encoder.encode(plainText)
+  },{
+    name:`conversation_${project}_${conversation_key}_${stamp}.md`,
+    data:encoder.encode(markdownText)
   }];
 
   await downloadZip(makeZip(textFiles),zipNameText);
@@ -284,6 +365,8 @@
     await downloadZip(makeZip(codeFiles),zipNameCode);
   }
 
-  alert(`Export done.\n- ${zipNameText}\n- ${codeFiles.length?zipNameCode:"(no code zip)"}`);
+  await downloadHtml(document.documentElement.outerHTML,fullHtmlName);
+
+  alert(`Export done.\n- ${zipNameText}\n- ${codeFiles.length?zipNameCode:"(no code zip)"}\n- ${fullHtmlName}`);
 
 })();
