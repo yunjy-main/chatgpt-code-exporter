@@ -1,0 +1,281 @@
+checkpoint: PROJECT_DESCRIPTION.txt@v1.1_add_chrome_extension_constraints_section
+
+============================================================
+ChatGPT Code/Text Exporter (perc_ldl)
+============================================================
+
+1. OVERVIEW
+------------------------------------------------------------
+This Chrome Extension exports:
+
+1) All code blocks from a ChatGPT conversation
+2) The full non-code conversation text
+
+Outputs:
+
+- chatgpt_<project>_<conversation>_<timestamp>_code.zip
+- chatgpt_<project>_<conversation>_<timestamp>_text.zip
+
+The system is designed for traceability, reproducibility,
+and structured code lifecycle management inside the perc_ldl workflow.
+
+
+2. CORE DESIGN PRINCIPLES
+------------------------------------------------------------
+
+2.1 File Name Is an Identifier
+
+A filename is not decoration.
+It is a tracking boundary.
+
+Especially:
+
+- checkpoint-based names preserve original identity
+- auto-generated names are explicitly marked
+- duplicates are never allowed silently
+
+Every exported file must be uniquely identifiable.
+
+
+2.2 Checkpoint-First Policy
+
+If a code block contains:
+
+    # checkpoint: filename@vX.Y_comment
+
+Then that exact string (after safe processing)
+becomes the filename.
+
+Rules:
+- "." in filename is preserved
+- "." inside version is preserved
+- No transformation of checkpoint content
+- Duplicate names receive suffix: _NNN
+
+
+2.3 Auto-Generated Naming
+
+If no checkpoint or filename hint exists:
+
+    @auto__<conversation_key>__block_generic_<NNN>
+
+Where:
+- @auto__ prefix is mandatory
+- double underscore separates structural levels
+- NNN is 3-digit block index
+
+Example:
+    @auto__launcher_E__block_generic_031
+
+
+3. EXTENSION HANDLING POLICY
+------------------------------------------------------------
+
+3.1 Extension Whitelist (auto only)
+
+Allowed extensions:
+
+py, js, ts, sh, rb,
+html, css,
+json, yaml, yml,
+txt, md,
+cpp, c, h,
+go, rs, java
+
+If extension detected AND in whitelist:
+    .ext is preserved
+
+If extension detected BUT not in whitelist:
+    dot removed
+    suffix converted to _ext
+
+Example:
+    .py   -> preserved
+    .p2p  -> _p2p
+
+
+3.2 Checkpoint Exception
+
+Whitelist NEVER applies to checkpoint-based filenames.
+
+Checkpoint filenames are preserved exactly,
+except for duplicate suffixing.
+
+
+4. DUPLICATE HANDLING
+------------------------------------------------------------
+
+If multiple identical filenames appear:
+
+Original:
+    launcher_E_check_p2p_cd.py@v1.1_fix_outputdir_cycle_false_positive
+
+Second occurrence:
+    launcher_E_check_p2p_cd.py@v1.1_fix_outputdir_cycle_false_positive_014
+
+Where:
+- 014 = block index
+- guarantees uniqueness
+- preserves chronological order
+
+
+5. ZIP STRUCTURE
+------------------------------------------------------------
+
+5.1 Code ZIP
+
+Contains one file per code block.
+
+- Each block independently saved
+- UTF-8 encoding
+- ZIP UTF-8 filename flag enabled (bit 11)
+
+Prevents Windows filename corruption.
+
+
+5.2 Text ZIP
+
+Contains:
+
+    conversation_<project>_<conversation>_<timestamp>.txt
+
+Includes full conversation text.
+
+
+6. ENCODING POLICY
+------------------------------------------------------------
+
+File contents:
+    UTF-8
+
+ZIP filenames:
+    UTF-8 with flag enabled
+
+Prevents mojibake (garbled Korean text).
+
+
+7. CHROME EXTENSION CONSTRAINTS
+------------------------------------------------------------
+
+7.1 No ES Modules in Content Script
+
+This project intentionally uses a single content.js file.
+
+Reason:
+
+Chrome Extension (MV3) content scripts,
+especially when injected via:
+
+    chrome.scripting.executeScript()
+
+are executed as classic scripts,
+not as ES modules.
+
+If "import" is used, the following error occurs:
+
+    Uncaught SyntaxError:
+    Cannot use import statement outside a module
+
+Therefore:
+
+- No "import" statements are used
+- No ES module syntax is used
+- All logic resides inside one file (content.js)
+
+
+7.2 No Build Step Required
+
+Because ES modules are not used:
+
+- No bundler (webpack/rollup/esbuild) required
+- No dist/ folder required
+- No src/ separation required
+
+The extension is fully functional as-is.
+
+
+7.3 Why This Decision Matters
+
+The single-file architecture ensures:
+
+- Maximum stability
+- No runtime module loading errors
+- No dependency resolution issues
+- Simpler deployment
+- Predictable behavior in MV3 environment
+
+
+8. PROJECT STRUCTURE
+------------------------------------------------------------
+
+chatgpt-code-exporter/
+
+    manifest.json
+    popup.html
+    popup.js
+    content.js
+    PROJECT_DESCRIPTION.txt
+
+
+9. EXECUTION FLOW
+------------------------------------------------------------
+
+1) User clicks extension icon
+2) Popup button clicked
+3) content.js injected via chrome.scripting.executeScript
+4) DOM scanned
+5) Filenames determined
+6) ZIP files generated
+7) Downloads triggered
+
+
+10. STABILITY DECISIONS
+------------------------------------------------------------
+
+- No ES modules
+- No import statements
+- Single content.js file
+- MV3 compatible
+- No external dependencies
+- No build step required
+
+
+11. FUTURE EXTENSIONS
+------------------------------------------------------------
+
+Potential improvements:
+
+- Automatic block type detection (cd / p2p / etc.)
+- Folder grouping inside ZIP
+- Hash-based integrity suffix
+- Message-level text splitting
+- Integration with local Git workflows
+
+
+12. VERSIONING RULE
+------------------------------------------------------------
+
+All JS files must contain checkpoint.
+
+Format:
+    filename@vX.Y_comment
+
+When modified:
+    version must increase
+    comment must describe change
+
+
+13. PURPOSE IN perc_ldl WORKFLOW
+------------------------------------------------------------
+
+This tool exists to:
+
+- Reduce manual copy/paste
+- Preserve exact code history
+- Maintain checkpoint traceability
+- Enable multi-conversation synchronization
+- Improve scalability of engineering discussions
+
+
+END OF DOCUMENT
+============================================================

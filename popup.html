@@ -1,0 +1,38 @@
+<!-- checkpoint: popup.html@v0.5.0_single_button_inject_content -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 12px;
+        width: 240px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        cursor: pointer;
+      }
+      .hint {
+        font-size: 12px;
+        opacity: 0.75;
+        margin-top: 8px;
+        line-height: 1.3;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="exportBtn">
+      Export Code / Text
+    </button>
+
+    <div class="hint">
+      Generates:<br>
+      chatgpt_&lt;project&gt;_&lt;conversation&gt;_&lt;time&gt;_code.zip<br>
+      chatgpt_&lt;project&gt;_&lt;conversation&gt;_&lt;time&gt;_text.zip
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
