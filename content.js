@@ -1,4 +1,4 @@
-// checkpoint: content.js@v0.5.3_add_markdown_conversation_export
+// checkpoint: content.js@v0.5.5_use_double_underscore_project_conversation_only
 (async () => {
 
   // ------------------------------
@@ -170,9 +170,9 @@
   const conversation_key=safeForFilename(convKeyRaw)||"conversation";
   const stamp=nowStamp();
 
-  const zipNameCode=`chatgpt_${project}_${conversation_key}_${stamp}_code.zip`;
-  const zipNameText=`chatgpt_${project}_${conversation_key}_${stamp}_text.zip`;
-  const fullHtmlName=`chatgpt_${project}_${conversation_key}_${stamp}_full.html`;
+  const zipNameCode=`chatgpt__${project}__${conversation_key}_${stamp}_code.zip`;
+  const zipNameText=`chatgpt__${project}__${conversation_key}_${stamp}_text.zip`;
+  const fullHtmlName=`chatgpt__${project}__${conversation_key}_${stamp}_full.html`;
 
   // ------------------------------
   // Filename detection
@@ -352,10 +352,10 @@
   const markdownText=buildConversationMarkdown();
 
   const textFiles=[{
-    name:`conversation_${project}_${conversation_key}_${stamp}.txt`,
+    name:`chatgpt__${project}__${conversation_key}_${stamp}.txt`,
     data:encoder.encode(plainText)
   },{
-    name:`conversation_${project}_${conversation_key}_${stamp}.md`,
+    name:`chatgpt__${project}__${conversation_key}_${stamp}.md`,
     data:encoder.encode(markdownText)
   }];
 

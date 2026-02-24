@@ -1,4 +1,4 @@
-checkpoint: PROJECT_DESCRIPTION.txt@v1.3_add_markdown_conversation_export
+checkpoint: PROJECT_DESCRIPTION.txt@v1.5_use_double_underscore_project_conversation_only
 
 ============================================================
 ChatGPT Code/Text Exporter (perc_ldl)
@@ -14,10 +14,10 @@ This Chrome Extension exports:
 
 Outputs:
 
-- chatgpt_<project>_<conversation>_<timestamp>_code.zip
-- chatgpt_<project>_<conversation>_<timestamp>_text.zip
+- chatgpt__<project>__<conversation>_<timestamp>_code.zip
+- chatgpt__<project>__<conversation>_<timestamp>_text.zip
   (contains .txt and .md)
-- chatgpt_<project>_<conversation>_<timestamp>_full.html
+- chatgpt__<project>__<conversation>_<timestamp>_full.html
 
 The system is designed for traceability, reproducibility,
 and structured code lifecycle management inside the perc_ldl workflow.
@@ -140,8 +140,8 @@ Prevents Windows filename corruption.
 
 Contains:
 
-    conversation_<project>_<conversation>_<timestamp>.txt
-    conversation_<project>_<conversation>_<timestamp>.md
+    chatgpt__<project>__<conversation>_<timestamp>.txt
+    chatgpt__<project>__<conversation>_<timestamp>.md
 
 Includes full conversation text and a reconstructed Markdown conversation.
 
@@ -149,7 +149,7 @@ Includes full conversation text and a reconstructed Markdown conversation.
 
 Contains:
 
-    chatgpt_<project>_<conversation>_<timestamp>_full.html
+    chatgpt__<project>__<conversation>_<timestamp>_full.html
 
 Includes full DOM snapshot as rendered.
 
