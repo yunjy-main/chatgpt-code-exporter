@@ -1,4 +1,4 @@
-// checkpoint: content.js@v0.5.5_use_double_underscore_project_conversation_only
+// checkpoint: content.js@v0.5.6_add_ui_profile_detection
 (async () => {
 
   // ------------------------------
@@ -221,10 +221,65 @@
   }
 
   // ------------------------------
+  // UI detection (code blocks)
+  // ------------------------------
+
+  function selectUiProfile(){
+    function count(sel){ return document.querySelectorAll(sel).length; }
+
+    const profiles=[
+      {
+        id:"ui_pre_code",
+        detail:"pre code",
+        detect:()=>count("pre code"),
+        get:()=>Array.from(document.querySelectorAll("pre code"))
+      },
+      {
+        id:"ui_pre_only",
+        detail:"pre (no code tag)",
+        detect:()=>{
+          const pre=count("pre");
+          const code=count("pre code");
+          return pre>0 && code==0 ? pre : 0;
+        },
+        get:()=>Array.from(document.querySelectorAll("pre"))
+      },
+      {
+        id:"ui_testid_code",
+        detail:"data-testid*='code'",
+        detect:()=>count("[data-testid*='code'], [data-testid*='Code']"),
+        get:()=>Array.from(document.querySelectorAll("[data-testid*='code'], [data-testid*='Code']"))
+      }
+    ];
+
+    let best=null;
+    for(const p of profiles){
+      const score=Number(p.detect()||0);
+      if(!best || score>best.score){
+        best={profile:p,score};
+      }
+    }
+
+    if(!best || best.score<=0){
+      const fallbackEls=Array.from(document.querySelectorAll("pre"));
+      return {id:"fallback_pre",detail:"pre",score:0,elements:fallbackEls};
+    }
+
+    return {
+      id:best.profile.id,
+      detail:best.profile.detail,
+      score:best.score,
+      elements:best.profile.get()
+    };
+  }
+
+  const uiSelection=selectUiProfile();
+
+  // ------------------------------
   // Collect code blocks
   // ------------------------------
 
-  const codeEls=Array.from(document.querySelectorAll("pre code"));
+  const codeEls=uiSelection.elements;
   const encoder=new TextEncoder();
   const usedNames=new Set();
   const codeFiles=[];
@@ -367,6 +422,8 @@
 
   await downloadHtml(document.documentElement.outerHTML,fullHtmlName);
 
-  alert(`Export done.\n- ${zipNameText}\n- ${codeFiles.length?zipNameCode:"(no code zip)"}\n- ${fullHtmlName}`);
+  const uiInfo=`${uiSelection.id} (${uiSelection.detail}), blocks=${codeEls.length}`;
+
+  alert(`Export done.\n- ${zipNameText}\n- ${codeFiles.length?zipNameCode:"(no code zip)"}\n- ${fullHtmlName}\n- ui: ${uiInfo}`);
 
 })();
